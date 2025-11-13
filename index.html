@@ -21,50 +21,60 @@
   <footer><p>© 2025 Smile WiFi</p></footer>
 
   <!-- WORKING SUPABASE + MARKED (ES MODULE) -->
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/module/index.js';
+ <script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/module/index.js';
 
-    const SUPABASE_URL = 'https://fhmeepsbofuxktpztfmp.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZobWVlcHNib2Z1eGt0cHp0Zm1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMzcyMTYsImV4cCI6MjA3ODYxMzIxNn0.dDsgqlmHUB_gcEbsqAZ77ebCtBwyeaIDCLiKsiyOiTA';
+  const SUPABASE_URL = 'https://fhmeepsbofuxktpztfmp.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZobWVlcHNib2Z1eGt0cHp0Zm1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMzcyMTYsImV4cCI6MjA3ODYxMzIxNn0.dDsgqlmHUB_gcEbsqAZ77ebCtBwyeaIDCLiKsiyOiTA';
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function loadNews() {
-      try {
-        const { data, error } = await supabase
-          .from('news')
-          .select('*')
-          .order('date', { ascending: false });
+  async function loadNews() {
+    try {
+      const { data, error } = await supabase
+        .from('news')
+        .select('*')
+        .order('date', { ascending: false });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        const container = document.getElementById('news-list');
-        container.innerHTML = data.length
-          ? data.map(article => `
-            <article>
-              <h2>${article.title}</h2>
-              <time>${new Date(article.date).toLocaleDateString()}</time>
-              ${article.image ? `<img src="${SUPABASE_URL}/storage/v1/object/public/news-images/${article.image}" alt="Article image">` : ''}
-              <div>${marked.parse(article.body)}</div>
-            </article>`).join('')
-          : '<p>No news yet. <a href="/balita/admin/">Add some in Admin!</a></p>';
-      } catch (err) {
-        console.error('Load error:', err);
-        document.getElementById('news-list').innerHTML = `
-          <div style="color:red;background:#fee;padding:15px;border-radius:8px;margin:20px;">
-            <strong>Error:</strong> ${err.message}<br>
-            <small>Check: Table exists? RLS allows read? Bucket public?</small>
-          </div>`;
+      const container = document.getElementById('news-list');
+      if (data.length === 0) {
+        container.innerHTML = '<p>No news yet. <a href="/balita/admin/index.html">Add one in Admin!</a></p>';
+      } else {
+        container.innerHTML = data.map(article => `
+          <article>
+            <h2>${article.title}</h2>
+            <time>${new Date(article.date).toLocaleDateString()}</time>
+            ${article.image ? `<img src="${SUPABASE_URL}/storage/v1/object/public/news-images/${article.image}" alt="News image" style="max-width:100%;border-radius:8px;margin:10px 0;">` : ''}
+            <div style="text-align:left;margin-top:10px;">${marked.parse(article.body)}</div>
+          </article>
+        `).join('');
       }
+    } catch (err) {
+      console.error('Supabase Error:', err);
+      document.getElementById('news-list').innerHTML = `
+        <div style="background:#ffe6e6;color:#d00;padding:15px;border-radius:8px;margin:20px;font-family:monospace;">
+          <strong>Supabase Error:</strong><br>
+          ${err.message}<br><br>
+          <small>
+            <strong>Fix:</strong><br>
+            1. Run SQL in Supabase → Create table + public read policy<br>
+            2. Make bucket <code>news-images</code> public<br>
+            3. Refresh this page
+          </small>
+        </div>`;
     }
+  }
 
-    const markedScript = document.createElement('script');
-    markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
-    markedScript.onload = loadNews;
-    markedScript.onerror = () => {
-      document.getElementById('news-list').innerHTML = '<p style="color:red;">Failed to load Markdown parser.</p>';
-    };
-    document.head.appendChild(markedScript);
-  </script>
+  // Load marked.js
+  const markedScript = document.createElement('script');
+  markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+  markedScript.onload = loadNews;
+  markedScript.onerror = () => {
+    document.getElementById('news-list').innerHTML = '<p style="color:red;">Failed to load Markdown renderer.</p>';
+  };
+  document.head.appendChild(markedScript);
+</script>
 </body>
 </html>
