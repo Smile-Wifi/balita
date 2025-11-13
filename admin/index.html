@@ -19,7 +19,6 @@
 </head>
 <body>
   <h1>SmileNews Admin</h1>
-
   <div class="card">
     <h2>Add / Edit News</h2>
     <form id="news-form">
@@ -32,18 +31,17 @@
       <button type="button" id="cancel-btn" style="display:none;background:#777">Cancel</button>
     </form>
   </div>
-
   <div class="card">
     <h2>Articles</h2>
     <ul id="articles-list" class="list"></ul>
   </div>
 
-  <!-- SUPABASE UMD -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL = 'https://fhmeepsbofuxktpztfmp.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZobWVlcHNib2Z1eGt0cHp0Zm1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMzcyMTYsImV4cCI6MjA3ODYxMzIxNn0.dDsgqlmHUB_gcEbsqAZ77ebCtBwyeaIDCLiKsiyOiTA';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = window.supabase.createClient(
+      'https://fhmeepsbofuxktpztfmp.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZobWVlcHNib2Z1eGt0cHp0Zm1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMzcyMTYsImV4cCI6MjA3ODYxMzIxNn0.dDsgqlmHUB_gcEbsqAZ77ebCtBwyeaIDCLiKsiyOiTA'
+    );
 
     const form = document.getElementById('news-form');
     const list = document.getElementById('articles-list');
@@ -59,20 +57,12 @@
     }
 
     async function load() {
-      try {
-        const { data, error } = await supabase.from('news').select('*').order('date', { ascending: false });
-        if (error) throw error;
-        list.innerHTML = data.map(a => `
-          <li>
-            <strong>${a.title}</strong> – ${new Date(a.date).toLocaleDateString()}
-            <div>
-              <button onclick="edit(${a.id})">Edit</button>
-              <span class="delete" onclick="del(${a.id})">Delete</span>
-            </div>
-          </li>`).join('');
-      } catch (err) {
-        alert('Load error: ' + err.message);
-      }
+      const { data } = await supabase.from('news').select('*').order('date', { ascending: false });
+      list.innerHTML = data.map(a => `
+        <li><strong>${a.title}</strong> – ${new Date(a.date).toLocaleDateString()}
+          <button onclick="edit(${a.id})">Edit</button>
+          <span class="delete" onclick="del(${a.id})">Delete</span>
+        </li>`).join('');
     }
 
     window.edit = async id => {
@@ -96,33 +86,23 @@
     form.onsubmit = async e => {
       e.preventDefault();
       const id = document.getElementById('edit-id').value;
-      const title = document.getElementById('title').value.trim();
-      const date = document.getElementById('date').value;
-      const body = document.getElementById('body').value.trim();
+      const payload = {
+        title: document.getElementById('title').value.trim(),
+        date: document.getElementById('date').value,
+        body: document.getElementById('body').value.trim()
+      };
       const file = document.getElementById('image').files[0];
-      let image = null;
-      if (file) image = await uploadImage(file);
-      const payload = { title, date, body };
-      if (image) payload.image = image;
-      try {
-        if (id) await supabase.from('news').update(payload).eq('id', id);
-        else await supabase.from('news').insert(payload);
-        form.reset();
-        document.getElementById('edit-id').value = '';
-        submitBtn.textContent = 'Save';
-        cancelBtn.style.display = 'none';
-        load();
-      } catch (err) {
-        alert('Save error: ' + err.message);
-      }
-    };
-
-    cancelBtn.onclick = () => {
+      if (file) payload.image = await uploadImage(file);
+      if (id) await supabase.from('news').update(payload).eq('id', id);
+      else await supabase.from('news').insert(payload);
       form.reset();
       document.getElementById('edit-id').value = '';
       submitBtn.textContent = 'Save';
       cancelBtn.style.display = 'none';
+      load();
     };
+
+    cancelBtn.onclick = () => { form.reset(); document.getElementById('edit-id').value = ''; submitBtn.textContent = 'Save'; cancelBtn.style.display = 'none'; };
 
     load();
   </script>
