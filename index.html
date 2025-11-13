@@ -19,14 +19,13 @@
   <main id="news-list"><p>Loading news…</p></main>
   <footer><p>© 2025 Smile WiFi</p></footer>
 
-  <!-- SUPABASE (ES MODULE) -->
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/module/index.js';
-
+  <!-- SUPABASE UMD (Global) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
     const SUPABASE_URL = 'https://fhmeepsbofuxktpztfmp.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZobWVlcHNib2Z1eGt0cHp0Zm1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMzcyMTYsImV4cCI6MjA3ODYxMzIxNn0.dDsgqlmHUB_gcEbsqAZ77ebCtBwyeaIDCLiKsiyOiTA';
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);  // Note: lowercase 'supabase'
 
     async function loadNews() {
       try {
@@ -46,14 +45,14 @@
                 ${a.image ? `<img src="${SUPABASE_URL}/storage/v1/object/public/news-images/${a.image}" alt="News image">` : ''}
                 <div style="text-align:left;margin-top:10px;">${marked.parse(a.body)}</div>
               </article>`).join('')
-          : '<p>No news yet. <a href="/balita/admin/index.html">Add one in Admin</a></p>';
+          : '<p>No news yet. <a href="/admin/index.html">Add one in Admin</a></p>';  // Fixed path for new repo
       } catch (err) {
         console.error(err);
         document.getElementById('news-list').innerHTML = `
           <div class="error">
             <strong>Supabase Error:</strong> ${err.message}<br><br>
             <small>1. Table <code>news</code> exists?<br>
-            2. RLS policy “public read” enabled?<br>
+            2. RLS policy "public read" enabled?<br>
             3. Bucket <code>news-images</code> is public?</small>
           </div>`;
       }
@@ -61,7 +60,7 @@
 
     // Load markdown renderer
     const ms = document.createElement('script');
-    ms.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+    ms.src = 'https://cdn.jsdelivr.net/npm/marked@14/marked.min.js';  // Latest version
     ms.onload = loadNews;
     ms.onerror = () => document.getElementById('news-list').innerHTML = '<p style="color:red;">Failed to load Markdown.</p>';
     document.head.appendChild(ms);
