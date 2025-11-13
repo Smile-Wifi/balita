@@ -38,12 +38,12 @@
     <ul id="articles-list" class="list"></ul>
   </div>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/module/index.js';
-
+  <!-- SUPABASE UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
     const SUPABASE_URL = 'https://fhmeepsbofuxktpztfmp.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZobWVlcHNib2Z1eGt0cHp0Zm1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMzcyMTYsImV4cCI6MjA3ODYxMzIxNn0.dDsgqlmHUB_gcEbsqAZ77ebCtBwyeaIDCLiKsiyOiTA';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const form = document.getElementById('news-form');
     const list = document.getElementById('articles-list');
@@ -59,16 +59,20 @@
     }
 
     async function load() {
-      const { data, error } = await supabase.from('news').select('*').order('date', { ascending: false });
-      if (error) { alert(error.message); return; }
-      list.innerHTML = data.map(a => `
-        <li>
-          <strong>${a.title}</strong> – ${new Date(a.date).toLocaleDateString()}
-          <div>
-            <button onclick="edit(${a.id})">Edit</button>
-            <span class="delete" onclick="del(${a.id})">Delete</span>
-          </div>
-        </li>`).join('');
+      try {
+        const { data, error } = await supabase.from('news').select('*').order('date', { ascending: false });
+        if (error) throw error;
+        list.innerHTML = data.map(a => `
+          <li>
+            <strong>${a.title}</strong> – ${new Date(a.date).toLocaleDateString()}
+            <div>
+              <button onclick="edit(${a.id})">Edit</button>
+              <span class="delete" onclick="del(${a.id})">Delete</span>
+            </div>
+          </li>`).join('');
+      } catch (err) {
+        alert('Load error: ' + err.message);
+      }
     }
 
     window.edit = async id => {
@@ -100,13 +104,17 @@
       if (file) image = await uploadImage(file);
       const payload = { title, date, body };
       if (image) payload.image = image;
-      if (id) await supabase.from('news').update(payload).eq('id', id);
-      else await supabase.from('news').insert(payload);
-      form.reset();
-      document.getElementById('edit-id').value = '';
-      submitBtn.textContent = 'Save';
-      cancelBtn.style.display = 'none';
-      load();
+      try {
+        if (id) await supabase.from('news').update(payload).eq('id', id);
+        else await supabase.from('news').insert(payload);
+        form.reset();
+        document.getElementById('edit-id').value = '';
+        submitBtn.textContent = 'Save';
+        cancelBtn.style.display = 'none';
+        load();
+      } catch (err) {
+        alert('Save error: ' + err.message);
+      }
     };
 
     cancelBtn.onclick = () => {
