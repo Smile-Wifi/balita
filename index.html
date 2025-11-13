@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smile WiFi News</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#f9f9f9;margin:0;padding:0;text-align:center}
+    header{background:#2c3e50;color:#fff;padding:20px}
+    h1{margin:0}
+    article{margin:20px auto;max-width:800px;background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+    img{max-width:100%;height:auto;border-radius:4px}
+    footer{background:#2c3e50;color:#fff;padding:10px;position:fixed;width:100%;bottom:0}
+  </style>
+</head>
+<body>
+  <header><h1>Smile WiFi News</h1></header>
+  <main id="news-list">
+    <p>Loading news…</p>
+  </main>
+  <footer><p>© 2025 Smile WiFi</p></footer>
+
+  <!-- Supabase client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://mkdimzahvdxecufbfxgt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rZGltemFodmR4ZWN1ZmJmeGd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMjcyOTcsImV4cCI6MjA3ODYwMzI5N30.K8Lhl43InsPaU37bCq6JuIifqJzwJaCWQoZyWpb8F7Y';
+    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadNews() {
+      const { data, error } = await supabase
+        .from('news')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (error) { console.error(error); return; }
+
+      const container = document.getElementById('news-list');
+      container.innerHTML = data.length
+        ? data.map(article => `
+          <article>
+            <h2>${article.title}</h2>
+            <time>${new Date(article.date).toLocaleDateString()}</time>
+            ${article.image ? `<img src="${SUPABASE_URL}/storage/v1/object/public/news-images/${article.image}">` : ''}
+            <div>${marked.parse(article.body)}</div>
+          </article>`).join('')
+        : '<p>No news yet.</p>';
+    }
+
+    // simple markdown renderer (include marked.js)
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+    script.onload = loadNews;
+    document.head.appendChild(script);
+  </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmileNews Admin</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:20px}
+    h1,h2{text-align:center}
+    .card{background:#fff;padding:20px;margin:15px auto;max-width:800px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+    label{display:block;margin-top:12px;font-weight:bold}
+    input,textarea,select{width:100%;padding:8px;margin-top:4px;border:1px solid #ccc;border-radius:4px}
+    button{margin-top:12px;padding:8px 16px;background:#2c3e50;color:#fff;border:none;border-radius:4px;cursor:pointer}
+    button:hover{background:#1a2530}
+    .list{list-style:none;padding:0}
+    .list li{padding:8px 0;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+    .delete{color:#c00;cursor:pointer}
+  </style>
+</head>
+<body>
+  <h1>SmileNews Admin</h1>
+
+  <!-- ==== FORM ==== -->
+  <div class="card">
+    <h2>Add / Edit News</h2>
+    <form id="news-form">
+      <input type="hidden" id="edit-id">
+
+      <label for="title">Title</label>
+      <input type="text" id="title" required>
+
+      <label for="date">Date &amp; Time</label>
+      <input type="datetime-local" id="date" required>
+
+      <label for="body">Body (Markdown)</label>
+      <textarea id="body" rows="8" required></textarea>
+
+      <label for="image">Image (optional)</label>
+      <input type="file" id="image" accept="image/*">
+
+      <button type="submit" id="submit-btn">Save</button>
+      <button type="button" id="cancel-btn" style="display:none;background:#777">Cancel</button>
+    </form>
+  </div>
+
+  <!-- ==== LIST ==== -->
+  <div class="card">
+    <h2>Existing Articles</h2>
+    <ul id="articles-list" class="list"></ul>
+  </div>
+
+  <!-- Supabase + Marked (markdown renderer) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script>
+    // ==== 1. CONFIG ==== 
+   const SUPABASE_URL = 'https://mkdimzahvdxecufbfxgt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rZGltemFodmR4ZWN1ZmJmeGd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMjcyOTcsImV4cCI6MjA3ODYwMzI5N30.K8Lhl43InsPaU37bCq6JuIifqJzwJaCWQoZyWpb8F7Y';
+    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ==== 2. DOM ELEMENTS ====
+    const form       = document.getElementById('news-form');
+    const list       = document.getElementById('articles-list');
+    const submitBtn  = document.getElementById('submit-btn');
+    const cancelBtn  = document.getElementById('cancel-btn');
+
+    // ==== 3. IMAGE UPLOAD ====
+    async function uploadImage(file) {
+      const ext      = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substr(2,9)}.${ext}`;
+      const { error } = await supabase.storage
+        .from('news-images')
+        .upload(fileName, file);
+      if (error) throw error;
+      return fileName;
+    }
+
+    // ==== 4. LOAD ARTICLES ====
+    async function loadArticles() {
+      const { data, error } = await supabase
+        .from('news')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (error) { alert(error.message); return; }
+
+      list.innerHTML = data.map(a => `
+        <li>
+          <span>
+            <strong>${a.title}</strong> – ${new Date(a.date).toLocaleDateString()}
+          </span>
+          <div>
+            <button onclick="edit(${a.id})">Edit</button>
+            <span class="delete" onclick="del(${a.id})">Delete</span>
+          </div>
+        </li>`).join('');
+    }
+
+    // ==== 5. EDIT ====
+    window.edit = async (id) => {
+      const { data, error } = await supabase
+        .from('news')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) return alert(error.message);
+
+      document.getElementById('edit-id').value = data.id;
+      document.getElementById('title').value   = data.title;
+      document.getElementById('date').value    = data.date.slice(0,16); // "2025-11-13T14:30"
+      document.getElementById('body').value    = data.body;
+      submitBtn.textContent = 'Update';
+      cancelBtn.style.display = 'inline-block';
+    };
+
+    // ==== 6. DELETE ====
+    window.del = async (id) => {
+      if (!confirm('Delete this article?')) return;
+
+      // remove image if exists
+      const { data: imgData } = await supabase
+        .from('news')
+        .select('image')
+        .eq('id', id)
+        .single();
+
+      if (imgData?.image) {
+        await supabase.storage.from('news-images').remove([imgData.image]);
+      }
+
+      await supabase.from('news').delete().eq('id', id);
+      loadArticles();
+    };
+
+    // ==== 7. FORM SUBMIT ====
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+
+      const id    = document.getElementById('edit-id').value;
+      const title = document.getElementById('title').value.trim();
+      const date  = document.getElementById('date').value;
+      const body  = document.getElementById('body').value.trim();
+      const file  = document.getElementById('image').files[0];
+
+      let imageName = null;
+      if (file) imageName = await uploadImage(file);
+
+      const payload = { title, date, body };
+      if (imageName) payload.image = imageName;
+
+      if (id) {
+        // UPDATE
+        await supabase.from('news').update(payload).eq('id', id);
+      } else {
+        // INSERT
+        await supabase.from('news').insert(payload);
+      }
+
+      // reset form
+      form.reset();
+      document.getElementById('edit-id').value = '';
+      submitBtn.textContent = 'Save';
+      cancelBtn.style.display = 'none';
+      loadArticles();
+    };
+
+    // ==== 8. CANCEL EDIT ====
+    cancelBtn.onclick = () => {
+      form.reset();
+      document.getElementById('edit-id').value = '';
+      submitBtn.textContent = 'Save';
+      cancelBtn.style.display = 'none';
+    };
+
+    // ==== 9. INITIAL LOAD ====
+    loadArticles();
+  </script>
+</body>
+</html>
