@@ -1,23 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Radio Station</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f8f8f8;
+      color: #333;
+    }
+    header {
+      background: #1a1a1a;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+    }
+    main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    iframe {
+      max-width: 100%;
+      border: none;
+    }
+    audio {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 600px;
+    }
+    footer {
+      text-align: center;
+      padding: 10px;
+      color: #777;
+      font-size: 0.9em;
+    }
+  </style>
 </head>
 <body>
 
-<h1>📻 My Radio Station Live</h1>
+<header>
+  <h1>🎵 My Radio Station Live</h1>
+</header>
 
-<!-- Facebook Page Live Embed -->
-<iframe 
-  src="https://www.facebook.com/plugins/page.php?href=https://www.facebook.com/YOUR_PAGE_NAME&tabs=timeline&width=500&height=600"
-  width="100%" 
-  height="600"
-  style="border:none;overflow:hidden"
-  scrolling="no" 
-  frameborder="0"
-  allowfullscreen="true">
-</iframe>
+<main>
+  <!-- Facebook Page Live Embed -->
+  <iframe 
+    src="https://www.facebook.com/plugins/page.php?href=https://www.facebook.com/YOUR_PAGE_NAME&tabs=timeline&width=500&height=600"
+    width="500" 
+    height="600">
+  </iframe>
+
+  <!-- Optional Radio Audio Stream -->
+  <!-- Replace the src URL with your live audio stream -->
+  <audio controls autoplay>
+    <source src="https://yourstreamurl.com/stream" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+</main>
+
+<footer>
+  &copy; 2026 My Radio Station. All rights reserved.
+</footer>
 
 </body>
 </html>
