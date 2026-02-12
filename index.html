@@ -1,74 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smile WiFi News</title>
-  <style>
-    body{font-family:Arial,sans-serif;background:#f9f9f9;margin:0;padding:0;text-align:center}
-    header{background:#2c3e50;color:#fff;padding:20px}
-    h1{margin:0}
-    article{margin:20px auto;max-width:800px;background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
-    img{max-width:100%;height:auto;border-radius:4px;margin:10px 0}
-    footer{background:#2c3e50;color:#fff;padding:10px;position:fixed;width:100%;bottom:0}
-    .error{background:#ffebee;color:#c62828;padding:15px;border-radius:8px;margin:20px;font-family:monospace;font-size:14px}
-  </style>
+  <title>My Radio Station</title>
 </head>
 <body>
-  <header><h1>Smile WiFi News</h1></header>
-  <main id="news-list"><p>Loading news…</p></main>
-  <footer><p>© 2025 Smile WiFi</p></footer>
 
-  <!-- SUPABASE UMD (WORKS IN BROWSER) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = 'https://fhmeepsbofuxktpztfmp.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZobWVlcHNib2Z1eGt0cHp0Zm1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMzcyMTYsImV4cCI6MjA3ODYxMzIxNn0.dDsgqlmHUB_gcEbsqAZ77ebCtBwyeaIDCLiKsiyOiTA';
+<h1>📻 My Radio Station Live</h1>
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<!-- Facebook Page Live Embed -->
+<iframe 
+  src="https://www.facebook.com/plugins/page.php?href=https://www.facebook.com/YOUR_PAGE_NAME&tabs=timeline&width=500&height=600"
+  width="100%" 
+  height="600"
+  style="border:none;overflow:hidden"
+  scrolling="no" 
+  frameborder="0"
+  allowfullscreen="true">
+</iframe>
 
-    async function loadNews() {
-      try {
-        const { data, error } = await supabase
-          .from('news')
-          .select('*')
-          .order('date', { ascending: false });
-
-        if (error) throw error;
-
-        const container = document.getElementById('news-list');
-        container.innerHTML = data.length === 0
-          ? '<p>No news yet. <a href="/balita/admin/index.html">Add one in Admin →</a></p>'
-          : data.map(a => `
-              <article>
-                <h2>${a.title}</h2>
-                <time>${new Date(a.date).toLocaleDateString()}</time>
-                ${a.image ? `<img src="${SUPABASE_URL}/storage/v1/object/public/news-images/${a.image}" alt="News image">` : ''}
-                <div style="text-align:left;margin-top:10px;">${marked.parse(a.body)}</div>
-              </article>
-            `).join('');
-      } catch (err) {
-        console.error('Supabase Error:', err);
-        document.getElementById('news-list').innerHTML = `
-          <div class="error">
-            <strong>Connection Failed:</strong> ${err.message}<br><br>
-            <small>
-              1. Is table <code>news</code> created?<br>
-              2. Is RLS enabled with <code>public read</code> policy?<br>
-              3. Is bucket <code>news-images</code> public?
-            </small>
-          </div>`;
-      }
-    }
-
-    // Load Markdown
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/marked@14/marked.min.js';
-    script.onload = loadNews;
-    script.onerror = () => {
-      document.getElementById('news-list').innerHTML = '<p style="color:red;">Failed to load Markdown parser.</p>';
-    };
-    document.head.appendChild(script);
-  </script>
 </body>
 </html>
