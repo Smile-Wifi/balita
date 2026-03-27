@@ -1,139 +1,256 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>2D Stealth Prototype</title>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <style>
-  body { margin: 0; overflow: hidden; background: #111; }
-  canvas { display: block; background: #222; margin: auto; }
-</style>
-</head>
-<body>
-<canvas id="game" width="800" height="600"></canvas>
-<script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-
-const TILE_SIZE = 40;
-const PLAYER_SIZE = 30;
-
-// Game objects
-let player = { x: 60, y: 60, speed: 3, color: 'lime' };
-let keysCollected = 0;
-
-// Door
-let door = { x: 700, y: 500, width: TILE_SIZE, height: TILE_SIZE, color: 'red', requiredKeys: 1 };
-
-// Key
-let key = { x: 400, y: 300, width: TILE_SIZE/2, height: TILE_SIZE/2, color: 'yellow', collected: false };
-
-// Enemies (patrolling)
-let enemies = [
-    { x: 200, y: 100, width: 30, height: 30, color: 'orange', dir: 1, range: [100, 300], speed: 2 }
-];
-
-// Walls
-let walls = [
-    { x: 100, y: 200, width: 400, height: 20 },
-    { x: 300, y: 400, width: 20, height: 200 },
-    { x: 500, y: 100, width: 20, height: 400 }
-];
-
-// Controls
-let keys = {};
-window.addEventListener("keydown", e => keys[e.key] = true);
-window.addEventListener("keyup", e => keys[e.key] = false);
-
-// Collision detection
-function rectCollision(a, b){
-    return a.x < b.x + b.width && a.x + PLAYER_SIZE > b.x &&
-           a.y < b.y + b.height && a.y + PLAYER_SIZE > b.y;
-}
-
-// Game loop
-function update(){
-    // Player movement
-    let dx = 0, dy = 0;
-    if(keys['ArrowUp']) dy -= player.speed;
-    if(keys['ArrowDown']) dy += player.speed;
-    if(keys['ArrowLeft']) dx -= player.speed;
-    if(keys['ArrowRight']) dx += player.speed;
-
-    let nextX = player.x + dx;
-    let nextY = player.y + dy;
-
-    // Check wall collisions
-    let tempPlayer = {x: nextX, y: nextY, width: PLAYER_SIZE, height: PLAYER_SIZE};
-    if(!walls.some(w => rectCollision(tempPlayer, w))){
-        player.x = nextX;
-        player.y = nextY;
-    }
-
-    // Enemy patrol
-    enemies.forEach(e => {
-        e.x += e.speed * e.dir;
-        if(e.x < e.range[0] || e.x + e.width > e.range[1]) e.dir *= -1;
-
-        if(rectCollision(player, e)){
-            alert("Caught by enemy! Game Over.");
-            window.location.reload();
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px;
         }
-    });
-
-    // Key collection
-    if(!key.collected && rectCollision(player, key)){
-        key.collected = true;
-        keysCollected++;
-        console.log("Key collected!");
+        .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-blue {
+            box-shadow: 0 0 20px rgba(0, 82, 208, 0.15);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .justified-tech {
+            text-align: justify;
+            text-justify: inter-word;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "inverse-on-surface": "#9a9d9f",
+                "on-tertiary-fixed-variant": "#6a1f77",
+                "on-error": "#ffefee",
+                "on-surface-variant": "#595c5e",
+                "primary": "#0052d0",
+                "secondary-fixed-dim": "#b3c1ff",
+                "secondary-container": "#c6cfff",
+                "secondary-dim": "#2a47ab",
+                "secondary": "#3854b7",
+                "outline": "#747779",
+                "tertiary-dim": "#7a2f86",
+                "on-secondary-container": "#1f3ea2",
+                "surface": "#0b0f10",
+                "primary-fixed-dim": "#638eff",
+                "surface-container": "#1e293b",
+                "on-background": "#f1f5f9",
+                "outline-variant": "#334155",
+                "inverse-surface": "#f5f7f9",
+                "surface-bright": "#1e293b",
+                "inverse-primary": "#5e8bff",
+                "error-container": "#fb5151",
+                "tertiary-fixed-dim": "#e48fed",
+                "surface-variant": "#334155",
+                "surface-dim": "#0f172a",
+                "on-primary": "#f1f2ff",
+                "on-tertiary-fixed": "#41004d",
+                "surface-container-low": "#0f172a",
+                "tertiary": "#883c93",
+                "secondary-fixed": "#c6cfff",
+                "error-dim": "#9f0519",
+                "on-secondary-fixed": "#00298b",
+                "error": "#b31b25",
+                "on-primary-fixed-variant": "#00276c",
+                "surface-container-high": "#1e293b",
+                "on-surface": "#f1f5f9",
+                "on-tertiary": "#ffeefb",
+                "surface-container-highest": "#334155",
+                "on-primary-fixed": "#ffffff",
+                "on-error-container": "#570008",
+                "background": "#0b0f10",
+                "primary-container": "#799dff",
+                "on-tertiary-container": "#60136d",
+                "primary-dim": "#0047b7",
+                "surface-tint": "#0052d0",
+                "surface-container-lowest": "#020617",
+                "on-primary-container": "#001e58",
+                "primary-fixed": "#799dff",
+                "tertiary-fixed": "#f39cfb",
+                "on-secondary": "#f2f1ff",
+                "on-secondary-fixed-variant": "#2b48ac",
+                "tertiary-container": "#f39cfb"
+              },
+              fontFamily: {
+                "headline": ["Plus Jakarta Sans"],
+                "body": ["Manrope"],
+                "label": ["Manrope"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
     }
-
-    // Door
-    if(rectCollision(player, door) && keysCollected >= door.requiredKeys){
-        alert("You escaped! You win!");
-        window.location.reload();
-    }
-}
-
-function draw(){
-    ctx.clearRect(0,0,canvas.width, canvas.height);
-
-    // Draw walls
-    ctx.fillStyle = "#555";
-    walls.forEach(w => ctx.fillRect(w.x, w.y, w.width, w.height));
-
-    // Draw player
-    ctx.fillStyle = player.color;
-    ctx.fillRect(player.x, player.y, PLAYER_SIZE, PLAYER_SIZE);
-
-    // Draw key
-    if(!key.collected){
-        ctx.fillStyle = key.color;
-        ctx.fillRect(key.x, key.y, key.width, key.height);
-    }
-
-    // Draw door
-    ctx.fillStyle = door.color;
-    ctx.fillRect(door.x, door.y, door.width, door.height);
-
-    // Draw enemies
-    enemies.forEach(e => {
-        ctx.fillStyle = e.color;
-        ctx.fillRect(e.x, e.y, e.width, e.height);
-    });
-
-    // HUD
-    ctx.fillStyle = "white";
-    ctx.font = "20px Arial";
-    ctx.fillText("Keys: " + keysCollected + "/" + door.requiredKeys, 10, 30);
-}
-
-function gameLoop(){
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
-</script>
-</body>
-</html>
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body min-h-screen pb-24 overflow-x-hidden">
+<!-- Top Navigation Anchor (Manual Filter: Details View - No Shell, but Identity Required) -->
+<header class="fixed top-0 w-full z-50 bg-slate-950/60 backdrop-blur-xl h-16 flex items-center justify-between px-6 shadow-[0_20px_40px_rgba(0,0,0,0.3)]">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-sm" data-weight="fill">hub</span>
+</div>
+<h1 class="font-headline font-bold text-lg tracking-tight bg-gradient-to-tr from-blue-400 to-blue-200 bg-clip-text text-transparent">Stitchbook</h1>
+</div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-surface-container-low text-primary-fixed-dim active:scale-95 duration-200">
+<span class="material-symbols-outlined">translate</span>
+</button>
+</header>
+<main class="mt-20 px-5 space-y-6">
+<!-- Node Status Header -->
+<section class="space-y-2">
+<div class="flex items-center gap-2 mb-1">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="text-[10px] uppercase tracking-widest text-emerald-400 font-bold">Live Status | 实时状态</span>
+</div>
+<h2 class="font-headline text-2xl font-extrabold tracking-tight leading-tight">
+                Node: ALPHA-9-SHANGHAI<br/>
+<span class="text-blue-400">节点: 阿尔法-9-上海</span>
+</h2>
+<p class="text-xs text-outline-variant font-medium tracking-wide">DC3-V4_EN-ZH_ACTIVE_REGION</p>
+</section>
+<!-- Real-time Performance Bento -->
+<div class="grid grid-cols-2 gap-4">
+<!-- Hash Rate -->
+<div class="glass-card rounded-3xl p-4 flex flex-col justify-between h-32 relative overflow-hidden">
+<div class="z-10">
+<p class="text-[10px] uppercase font-bold text-slate-400">Hash Rate | 哈希率</p>
+<p class="text-xl font-headline font-bold mt-1">14.2 TH/s</p>
+</div>
+<div class="absolute bottom-0 left-0 w-full h-12 flex items-end opacity-50">
+<svg class="w-full h-full text-primary" preserveaspectratio="none" viewbox="0 0 100 40">
+<path d="M0 40 L10 30 L20 35 L30 15 L40 25 L50 10 L60 20 L70 5 L80 15 L90 10 L100 25 L100 40 Z" fill="currentColor" fill-opacity="0.2"></path>
+<path d="M0 40 L10 30 L20 35 L30 15 L40 25 L50 10 L60 20 L70 5 L80 15 L90 10 L100 25" fill="none" stroke="currentColor" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<!-- Latency -->
+<div class="glass-card rounded-3xl p-4 flex flex-col justify-between h-32 relative overflow-hidden">
+<div class="z-10">
+<p class="text-[10px] uppercase font-bold text-slate-400">Latency | 延迟</p>
+<p class="text-xl font-headline font-bold mt-1">24 ms</p>
+</div>
+<div class="absolute bottom-0 left-0 w-full h-12 flex items-end opacity-50">
+<svg class="w-full h-full text-emerald-400" preserveaspectratio="none" viewbox="0 0 100 40">
+<path d="M0 40 L15 35 L30 38 L45 20 L60 25 L75 18 L90 22 L100 15 L100 40 Z" fill="currentColor" fill-opacity="0.2"></path>
+<path d="M0 40 L15 35 L30 38 L45 20 L60 25 L75 18 L90 22 L100 15" fill="none" stroke="currentColor" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- Technical Metrics List -->
+<section class="glass-card rounded-[2rem] p-6 space-y-6">
+<h3 class="text-xs font-bold uppercase tracking-[0.2em] text-blue-500">Core Metrics | 核心指标</h3>
+<div class="space-y-5">
+<div class="flex justify-between items-center group">
+<div class="space-y-0.5">
+<p class="text-sm font-semibold">Block Height | 区块高度</p>
+<p class="text-[10px] text-slate-500 tracking-wider">LATEST VERIFIED EPOCH</p>
+</div>
+<p class="font-headline font-bold text-lg">1,284,509</p>
+</div>
+<div class="flex justify-between items-center">
+<div class="space-y-0.5">
+<p class="text-sm font-semibold">Sync Status | 同步状态</p>
+<p class="text-[10px] text-slate-500 tracking-wider">PEER-TO-NODE COHERENCE</p>
+</div>
+<div class="text-right">
+<p class="font-headline font-bold text-lg text-emerald-400">99.9%</p>
+<p class="text-[8px] uppercase font-bold text-emerald-500/60">Synchronized</p>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<div class="space-y-0.5">
+<p class="text-sm font-semibold">Peers Connected | 已连接节点</p>
+<p class="text-[10px] text-slate-500 tracking-wider">ACTIVE DC3 OVERLAY</p>
+</div>
+<div class="flex items-center gap-2">
+<p class="font-headline font-bold text-lg">128</p>
+<span class="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full font-bold">Active</span>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<div class="space-y-0.5">
+<p class="text-sm font-semibold">Security Level | 安全等级</p>
+<p class="text-[10px] text-slate-500 tracking-wider">ENCRYPTION LAYER VERIFIED</p>
+</div>
+<p class="text-xs font-bold font-headline bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">Protocol v4.2 Secured</p>
+</div>
+</div>
+<div class="pt-4 border-t border-white/5">
+<p class="text-[11px] text-slate-400 leading-relaxed justified-tech px-1">
+                    Node ALPHA-9 operates on the decentralized truth layer, maintaining localized shard integrity for the Shanghai district. This node utilizes advanced DC3 gossip protocols to ensure 0-knowledge verification across all peer clusters within the Stitchbook network architecture.
+                </p>
+</div>
+</section>
+<!-- Log Stream -->
+<section class="space-y-4">
+<div class="flex justify-between items-center">
+<h3 class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Activity Log | 活动日志</h3>
+<span class="text-[9px] font-mono text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded">AUTO_REFRESH ON</span>
+</div>
+<div class="glass-card rounded-2xl overflow-hidden">
+<div class="h-48 overflow-y-auto no-scrollbar p-4 space-y-3 font-mono text-[10px]">
+<div class="flex gap-3 text-emerald-400/80">
+<span class="shrink-0 opacity-50">14:22:01</span>
+<span>[DC3] Block Verified 1,284,509 -&gt; SUCCESS</span>
+</div>
+<div class="flex gap-3 text-slate-300">
+<span class="shrink-0 opacity-50">14:21:58</span>
+<span>[P2P] Peer Handshake: 192.168.x.x -&gt; ESTABLISHED</span>
+</div>
+<div class="flex gap-3 text-slate-300">
+<span class="shrink-0 opacity-50">14:21:45</span>
+<span>[MSG] Syncing shard #0492-delta...</span>
+</div>
+<div class="flex gap-3 text-blue-400">
+<span class="shrink-0 opacity-50">14:21:30</span>
+<span>[SEC] Protocol v4.2 handshake re-validated</span>
+</div>
+<div class="flex gap-3 text-slate-300">
+<span class="shrink-0 opacity-50">14:21:12</span>
+<span>[P2P] Node discovery broadcast: ALPHA-9</span>
+</div>
+<div class="flex gap-3 text-amber-400/80">
+<span class="shrink-0 opacity-50">14:20:55</span>
+<span>[SYS] Tonal nesting shift detected: surface-low</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Action Buttons -->
+<div class="grid grid-cols-2 gap-3 pt-2">
+<button class="bg-surface-container-high text-on-surface py-4 px-2 rounded-2xl font-headline font-bold text-xs flex items-center justify-center gap-2 border border-white/5 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+                Refresh Log | 刷新日志
+            </button>
+<button class="bg-gradient-to-tr from-primary to-primary-container text-white py-4 px-2 rounded-2xl font-headline font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-[0_10px_20px_rgba(0,82,208,0.2)]">
+<span class="material-symbols-outlined text-[18px]">analytics</span>
+                Network Report | 网络报告
+            </button>
+</div>
+</main>
+<!-- Visual Accents (Background Glowing Orbs) -->
+<div class="fixed top-[20%] -left-20 w-64 h-64 bg-primary/20 rounded-full blur-[100px] -z-10"></div>
+<div class="fixed bottom-[10%] -right-20 w-80 h-80 bg-blue-900/20 rounded-full blur-[120px] -z-10"></div>
+<!-- Navigation Suppression: This is a task-focused sub-page. BottomNavBar is suppressed to prioritize the technical deep-dive canvas. -->
+</body></html>
